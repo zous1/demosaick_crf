@@ -1,0 +1,15 @@
+--model_name newscrf_nyu
+--encoder small07
+--dataset nyu
+--input_height 500
+--input_width 500
+--max_depth 10
+
+--data_path datasets/nyu/Kodak24/
+--gt_path datasets/nyu/Kodak24/
+--filenames_file_eval data_splits/DIV2K_test.txt
+--min_depth_eval 1e-3
+--max_depth_eval 10
+--eigen_crop
+
+--checkpoint_path models/newcrfs_nyu/model-78900-best_abs_rel_1.00000

@@ -1,0 +1,15 @@
+--model_name newscrf_nyu
+--encoder small07
+--dataset nyu
+--input_height 256
+--input_width 256
+--max_depth 10
+
+--data_path_eval datasets/nyu/test_cut/
+--gt_path_eval datasets/nyu/test_cut/
+--filenames_file_eval data_splits/rgbw_eval_files_with_gt.txt
+--min_depth_eval 1e-3
+--max_depth_eval 10
+--eigen_crop
+
+--checkpoint_path models/newcrfs_nyu/model-98240-best_abs_rel_1.00000

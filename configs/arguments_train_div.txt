@@ -1,0 +1,32 @@
+--mode train
+--model_name newcrfs_nyu
+--encoder small07
+--pretrain model_zoo/swin_transformer/swin_small_patch4_window7_224_22k.pth
+--dataset nyu
+--data_path datasets/nyu/DIV2K
+--gt_path datasets/nyu/DIV2K
+--filenames_file data_splits/DIV2K_train.txt
+--batch_size 8
+--num_epochs 21
+--learning_rate 1e-4
+--weight_decay 1e-2
+--adam_eps 1e-3
+--num_threads 1
+--input_height 256
+--input_width 256
+--max_depth 255
+--do_random_rotate
+--degree 2.5
+--log_directory ./models/
+--multiprocessing_distributed
+--dist_url tcp://127.0.0.1:2345
+
+--log_freq 1000
+--do_online_eval
+--eval_freq 7890
+--data_path_eval datasets/nyu/Kodak24
+--gt_path_eval datasets/nyu/Kodak24
+--filenames_file_eval data_splits/DIV2K_test.txt
+--min_depth_eval 1e-3
+--max_depth_eval 255
+--eigen_crop
