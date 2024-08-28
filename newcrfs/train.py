@@ -121,12 +121,12 @@ def online_eval(model, dataloader_eval, gpu, ngpus, epoch,post_process=False):
 ############################################加噪声
             image = add_gaussian_noise(image,mean=0,std=args.noise_level) 
 
-            pred_depth,w = model(image)
+            pred_depth= model(image)
 #############################################################涉及了深度图像的翻转、融合以及掩码的生成和应用等操作
 ####################################################旨在处理深度图像以改善其质量
             if post_process:
                 image_flipped = flip_lr(image)
-                pred_depth_flipped,w1 = model(image_flipped)
+                pred_depth_flipped = model(image_flipped)
                 pred_depth = post_process_depth(pred_depth, pred_depth_flipped)
           
             pred_depth = pred_depth.cpu().numpy().squeeze()
@@ -349,14 +349,14 @@ def main_worker(gpu, ngpus_per_node, args):
                 #####################################加噪声
                 if args.noise is True:
                     image = add_gaussian_noise(image,mean=0,std=args.noise_level) 
-                depth_est,w = model(image)
+                depth_est = model(image)
                 if args.dataset == 'nyu':
                     mask = depth_gt > 0.00001
                 else:
                     mask = depth_gt > 1.0
-    ###################################################双loss，并且对w通道进行预处理
+
                 loss_final = silog_criterion.forward(depth_est, depth_gt, mask.to(torch.bool))
-                # loss = loss_w+loss_final
+             
                 loss = loss_final
                 
                 loss.backward()
@@ -412,7 +412,6 @@ def main_worker(gpu, ngpus_per_node, args):
                     #############################################将range(9)改成了(1)，使模型只保存一个
                         for i in range(1):
                             # eval_summary_writer.add_scalar(eval_metrics[i], eval_measures[i].cpu(), int(global_step))
-                            measure = 1.00000
                             is_best = True
                             if is_best:
                                 # old_best_step = best_eval_steps[i]
@@ -423,7 +422,7 @@ def main_worker(gpu, ngpus_per_node, args):
                                 #     command = 'rm {}'.format(model_path)
                                 #     os.system(command)
                                 best_eval_steps[i] = global_step
-                                model_save_name = '/model-{}-best_{}_{:.5f}'.format(global_step, eval_metrics[i], measure)
+                                model_save_name = '/model-{}-best_crf.pth'.format(epoch)
                                 print('New best for {}. Saving model: {}'.format(eval_metrics[i], model_save_name))
                                 checkpoint = {'global_step': global_step,
                                             'model': model.state_dict(),

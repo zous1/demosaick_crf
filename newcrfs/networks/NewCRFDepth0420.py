@@ -10,10 +10,10 @@ from contrast.MIRnet import MIRNet
 from contrast.Restormer import Restormer
 # from .Mambalayer import MambaLayer
 from contrast.sun_unet0522 import UNet
-from contrast.SwinIR import SwinIR
-from contrast.MPENet import MPRNet
+from contrast.MPRNet import MPRNet
 from contrast.SRMNet import SRMNet
 from contrast.SPDNet import Rainnet
+from contrast.FSNet import FSNet
 from PIL import Image
 
 
@@ -46,7 +46,7 @@ class NewCRFDepth(nn.Module):
         #     self.unet = UNetRes()
         # self.Restormer = Uformer(img_size=256, embed_dim=16,depths=[2, 2, 2, 2, 2, 2, 2, 2, 2],
         #          win_size=8, mlp_ratio=4., token_projection='linear', token_mlp='leff', modulator=True, shift_flag=False)
-        self.Restormer = MIRNet()
+        self.Restormer = FSNet()
         self.init_weights(pretrained=pretrained)
 
     def init_weights(self, pretrained=None):
@@ -67,7 +67,7 @@ class NewCRFDepth(nn.Module):
         # 合并
         rgbw=torch.cat((img_MASK,w),1)
         feats = self.Restormer(rgbw)
-        return feats[:,0:3,],w
+        return feats[:,0:3,]
         # return feats,w
 
     def RGB_to_W(self,imgs):
