@@ -46,7 +46,8 @@ parser.add_argument('--min_depth_eval',            type=float, help='minimum dep
 parser.add_argument('--max_depth_eval',            type=float, help='maximum depth for evaluation', default=80)
 parser.add_argument('--eigen_crop',                            help='if set, crops according to Eigen NIPS14', action='store_true')
 parser.add_argument('--garg_crop',                             help='if set, crops according to Garg  ECCV16', action='store_true')
-
+parser.add_argument('--noise',                                 help='if set, add gussian noise', action='store_true')
+parser.add_argument('--noise_level',               type=float, help='if set, perform online eval in every eval_freq steps', default=0)
 
 if sys.argv.__len__() == 2:
     arg_filename_with_prefix = '@' + sys.argv[1]
@@ -70,14 +71,14 @@ def eval(model, dataloader_eval, post_process=True):
             image = torch.autograd.Variable(eval_sample_batched['image'].cuda())
             gt_depth = eval_sample_batched['depth']
             # print(gt_depth.shape)
-        # 生成预测深度图
-#############################################################
-        pred_image,w = model(image)
-        if post_process:
-            image_flipped = flip_lr(image)
-            pred_depth_flipped,w1 = model(image_flipped)
-            pred_image = post_process_depth(pred_image, pred_depth_flipped)
-        # 去掉批量维度
+            image_gt=image
+            image = add_gaussian_noise(image,mean=0,std=args.noise_level) 
+            pred_image = model(image)
+            if post_process:
+                image_flipped = flip_lr(image)
+                pred_depth_flipped = model(image_flipped)
+                pred_image = post_process_depth(pred_image, pred_depth_flipped)
+        #去掉批量维度
         pred_image = pred_image.squeeze(0)  # 现在形状为 (3, 2016, 1344)
         
         # 假设 pred_image 是一个 PyTorch 张量
@@ -91,14 +92,11 @@ def eval(model, dataloader_eval, post_process=True):
         # 将 NumPy 数组转换为 PIL Image 对象
         pred_image_pil = Image.fromarray((pred_image_np *3 * 255).astype(np.uint8))
 
-        file_path = f'datasets/nyu/output/pred_{i}.png'
+        file_path = f'datasets/nyu/output/pred_{i:02d}.png'
         pred_image_pil.save(file_path)  # 保存为 PNG 格式
 
         image1 = load_image(file_path)
         
-        # pred_image = model(image)
-        image_gt=image
-        # print(pred_image.shape)
         # 计算 PSNR 并添加到列表中
         psnr_value = compute_psnr(image_gt, image1)
         psnr_values.append(psnr_value)
@@ -133,6 +131,22 @@ def compute_psnr(img1, img2, max_val=255.0):
     # mse = torch.mean((gt - pred) ** 2)
     # psnr = 20 * torch.log10(max_value / torch.sqrt(mse))
     # return psnr
+
+def add_gaussian_noise(imgs, mean=0, std=0.8):
+    """
+    Add Gaussian noise to the input images.
+    
+    Args:
+        imgs (torch.Tensor): Input images tensor with shape (batch_size, channels, height, width).
+        mean (float): Mean of the Gaussian noise distribution.
+        std (float): Standard deviation of the Gaussian noise distribution.
+    
+    Returns:
+        torch.Tensor: Noisy images tensor with the same shape as input.
+    """
+    noise = torch.randn_like(imgs) * std + mean
+    noisy_imgs = imgs + noise
+    return noisy_imgs
 
 def load_image(file_path):
     # 读取图像
@@ -181,7 +195,7 @@ def main_worker(args):
     #     eval_measures = eval(model, dataloader_eval, post_process=True)
     # model.eval()
     # with torch.no_grad():
-        psnr_values = eval(model, dataloader_eval, post_process=False)
+        psnr_values = eval(model, dataloader_eval, post_process=True)
 
     # 打印 PSNR 值列表
     print("PSNR 值列表：", psnr_values)
